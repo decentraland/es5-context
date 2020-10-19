@@ -72,6 +72,9 @@ const stableGlobalPropertyNames = [
 
   "escape",
   "unescape",
+
+  "fetch", // Decentraland
+  "WebSocket", // Decentraland
 ];
 
 const unstableGlobalPropertyNames = [

@@ -24,6 +24,8 @@ export type UnsafeRec = {
   unsafeGlobal: any;
   unsafeEval: EvalFunc;
   unsafeFunction: SafeFunctionOp ;
+  sharedGlobalDescs: PropertyDescriptorMap & ThisType<any>
+  allShims?: any[]
   callAndWrapError: (a: any, b: any) => any;
 };
 

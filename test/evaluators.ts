@@ -15,6 +15,7 @@ const unsafeRec: UnsafeRec = {
   unsafeGlobal: {} as any,
   unsafeEval: eval,
   unsafeFunction: Function,
+  sharedGlobalDescs: {},
   callAndWrapError: (a: any, b: any) => {
     throw "stub";
   },
