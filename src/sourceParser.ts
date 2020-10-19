@@ -16,13 +16,15 @@
 // We do not write the regexp in a straightforward way, so that an
 // apparennt html comment does not appear in this file. Thus, we avoid
 // rejection by the overly eager rejectDangerousSources.
-const htmlCommentPattern = new RegExp(`(?:${'<'}!--|--${'>'})`)
+const htmlCommentPattern = new RegExp(`(?:${"<"}!--|--${">"})`);
 
 function rejectHtmlComments(s: string) {
-  const index = s.search(htmlCommentPattern)
+  const index = s.search(htmlCommentPattern);
   if (index !== -1) {
-    const linenum = s.slice(0, index).split('\n').length // more or less
-    throw new SyntaxError(`possible html comment syntax rejected around line ${linenum}`)
+    const linenum = s.slice(0, index).split("\n").length; // more or less
+    throw new SyntaxError(
+      `possible html comment syntax rejected around line ${linenum}`
+    );
   }
 }
 
@@ -48,13 +50,15 @@ function rejectHtmlComments(s: string) {
 // something like that from something like importnotreally('power.js') which
 // is perfectly safe.
 
-const importPattern = /\bimport\s*(?:\(|\/[/*])/
+const importPattern = /\bimport\s*(?:\(|\/[/*])/;
 
 function rejectImportExpressions(s: string) {
-  const index = s.search(importPattern)
+  const index = s.search(importPattern);
   if (index !== -1) {
-    const linenum = s.slice(0, index).split('\n').length // more or less
-    throw new SyntaxError(`possible import expression rejected around line ${linenum}`)
+    const linenum = s.slice(0, index).split("\n").length; // more or less
+    throw new SyntaxError(
+      `possible import expression rejected around line ${linenum}`
+    );
   }
 }
 
@@ -75,26 +79,28 @@ function rejectImportExpressions(s: string) {
 // occurrences, not malicious one. In particular, `(eval)(...)` is
 // direct eval syntax that would not be caught by the following regexp.
 
-const someDirectEvalPattern = /\beval\s*(?:\(|\/[/*])/
+const someDirectEvalPattern = /\beval\s*(?:\(|\/[/*])/;
 
 function rejectSomeDirectEvalExpressions(s: string) {
-  const index = s.search(someDirectEvalPattern)
+  const index = s.search(someDirectEvalPattern);
   if (index !== -1) {
-    const linenum = s.slice(0, index).split('\n').length // more or less
-    throw new SyntaxError(`possible direct eval expression rejected around line ${linenum}`)
+    const linenum = s.slice(0, index).split("\n").length; // more or less
+    throw new SyntaxError(
+      `possible direct eval expression rejected around line ${linenum}`
+    );
   }
 }
 
 export function rejectDangerousSources(s: string) {
-  rejectHtmlComments(s)
-  rejectImportExpressions(s)
-  rejectSomeDirectEvalExpressions(s)
+  rejectHtmlComments(s);
+  rejectImportExpressions(s);
+  rejectSomeDirectEvalExpressions(s);
 }
 
 // Export a rewriter transform.
 export const rejectDangerousSourcesTransform = {
   rewrite<T extends { src: string }>(rs: T) {
-    rejectDangerousSources(rs.src)
-    return rs
-  }
-}
+    rejectDangerousSources(rs.src);
+    return rs;
+  },
+};

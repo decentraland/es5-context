@@ -1,14 +1,14 @@
-import { UnsafeRec } from './evaluators'
-import { safeStringifyFunction } from './utilities'
+import { UnsafeRec } from "./evaluators";
+import { safeStringifyFunction } from "./utilities";
 
 function buildSafeFunction<T>(unsafeRec: UnsafeRec, safeFunctionOperation: T) {
-  const { callAndWrapError, unsafeFunction } = unsafeRec
+  const { callAndWrapError, unsafeFunction } = unsafeRec;
 
-  const { defineProperties } = Object
+  const { defineProperties } = Object;
 
   const safeFunction = function Function() {
-    return callAndWrapError(safeFunctionOperation, arguments)
-  }
+    return callAndWrapError(safeFunctionOperation, arguments);
+  };
 
   // Ensure that Function from any compartment in a root realm can be used
   // with instance checks in any compartment of the same root realm.
@@ -22,13 +22,13 @@ function buildSafeFunction<T>(unsafeRec: UnsafeRec, safeFunctionOperation: T) {
     // Function.prototype.toString which is called by some third-party
     // libraries.
     toString: {
-      value: () => 'function Function() { [shim code] }',
+      value: () => "function Function() { [shim code] }",
       writable: false,
       enumerable: false,
-      configurable: true
-    }
-  })
+      configurable: true,
+    },
+  });
 
-  return safeFunction
+  return safeFunction;
 }
-export const buildSafeFunctionString = safeStringifyFunction(buildSafeFunction)
+export const buildSafeFunctionString = safeStringifyFunction(buildSafeFunction);

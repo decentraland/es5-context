@@ -1,5 +1,3 @@
-// https://github.com/Agoric/realms-shim/blob/60f29d0f9cc5cd1c04c9ad3b5e75c70a459baf86/src/utilities.js
-
 // we'd like to abandon, but we can't, so just scream and break a lot of
 // stuff. However, since we aren't really aborting the process, be careful to
 // not throw an Error object which could be captured by child-Realm code and
@@ -23,7 +21,7 @@ export function throwTantrum(s: string, err?: Error) {
   throw msg;
 }
 
-export function assert(condition: any, message: string) {
+export function assert(condition: boolean, message: string) {
   if (!condition) {
     throwTantrum(message);
   }
@@ -41,14 +39,14 @@ export function safeStringifyFunction(fn: Function) {
 
   // Restore eval which is modified by esm module.
   // (0, eval) => (0, <runtime>.e)
-  src = src.replace(/\(0,\s*_[0-9a-fA-F]{3}\u200D\.e\)/g, '(0, eval)');
+  src = src.replace(/\(0,\s*_[0-9a-fA-F]{3}\u200D\.e\)/g, "(0, eval)");
 
   // Restore globals such as Reflect which are modified by esm module.
   // Reflect => <runtime>.e.Reflect
-  src = src.replace(/_[0-9a-fA-F]{3}\u200D\.g\./g, '');
+  src = src.replace(/_[0-9a-fA-F]{3}\u200D\.g\./g, "");
 
   // Remove code coverage which is injected by nyc module.
-  src = src.replace(/cov_[^+]+\+\+[;,]/g, '');
+  src = src.replace(/cov_[^+]+\+\+[;,]/g, "");
 
   return src;
 }

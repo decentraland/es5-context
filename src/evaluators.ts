@@ -1,35 +1,46 @@
 // Portions adapted from V8 - Copyright 2016 the V8 project authors.
 // https://github.com/v8/v8/blob/master/src/builtins/builtins-function.cc
 
-import { assert, throwTantrum } from './utilities'
-import { apply, arrayConcat, arrayJoin, arrayPop, getPrototypeOf, regexpTest, stringIncludes } from './commons'
-import { getOptimizableGlobals } from './optimizer'
-import { buildScopeHandlerString } from './scopeHandler'
-import { buildSafeEvalString } from './safeEval'
-import { buildSafeFunctionString } from './safeFunction'
-import { applyTransformsString } from './transforms'
-import { rejectDangerousSourcesTransform } from './sourceParser'
+import { assert, throwTantrum } from "./utilities";
+import {
+  apply,
+  arrayConcat,
+  arrayJoin,
+  arrayPop,
+  getPrototypeOf,
+  regexpTest,
+  stringIncludes,
+} from "./commons";
+import { getOptimizableGlobals } from "./optimizer";
+import { buildScopeHandlerString } from "./scopeHandler";
+import { buildSafeEvalString } from "./safeEval";
+import { buildSafeFunctionString } from "./safeFunction";
+import { applyTransformsString } from "./transforms";
+import { rejectDangerousSourcesTransform } from "./sourceParser";
 
-export type EvalFunc = (s: string) => any
+export type EvalFunc = (s: string) => any;
 export type UnsafeRec = {
-  unsafeGlobal: any
-  unsafeEval: EvalFunc
-  unsafeFunction: typeof Function
-  callAndWrapError: (a: any, b: any) => any
-}
+  unsafeGlobal: any;
+  unsafeEval: EvalFunc;
+  unsafeFunction: typeof Function;
+  callAndWrapError: (a: any, b: any) => any;
+};
 
 function buildOptimizer(constants: string[]) {
   // No need to build an oprimizer when there are no constants.
-  if (constants.length === 0) return ''
+  if (constants.length === 0) return "";
   // Use 'this' to avoid going through the scope proxy, which is unecessary
   // since the optimizer only needs references to the safe global.
-  return `const {${arrayJoin(constants, ',')}} = this;`
+  return `const {${arrayJoin(constants, ",")}} = this;`;
 }
 
-function createScopedEvaluatorFactory(unsafeRec: UnsafeRec, constants: string[]) {
-  const { unsafeFunction } = unsafeRec
+function createScopedEvaluatorFactory(
+  unsafeRec: UnsafeRec,
+  constants: string[]
+) {
+  const { unsafeFunction } = unsafeRec;
 
-  const optimizer = buildOptimizer(constants)
+  const optimizer = buildOptimizer(constants);
 
   // Create a function in sloppy mode, so that we can use 'with'. It returns
   // a function in strict mode that evaluates the provided code using direct
@@ -65,93 +76,122 @@ function createScopedEvaluatorFactory(unsafeRec: UnsafeRec, constants: string[])
         return eval(arguments[0]);
       };
     }
-  `)
+  `);
 }
 
-export function createSafeEvaluatorFactory(unsafeRec: UnsafeRec, safeGlobal: any, transforms?: any[], sloppyGlobals?: boolean) {
-  const { unsafeEval } = unsafeRec
-  const applyTransforms = unsafeEval(applyTransformsString)
+export function createSafeEvaluatorFactory(
+  unsafeRec: UnsafeRec,
+  safeGlobal: any,
+  transforms?: any[],
+  sloppyGlobals?: boolean
+) {
+  const { unsafeEval } = unsafeRec;
+  const applyTransforms = unsafeEval(applyTransformsString);
 
   function factory(endowments = {}, options: any = {}) {
     // todo clone all arguments passed to returned function
-    const localTransforms = options.transforms || []
-    const realmTransforms = transforms || []
+    const localTransforms = options.transforms || [];
+    const realmTransforms = transforms || [];
 
-    const mandatoryTransforms = [rejectDangerousSourcesTransform]
-    const allTransforms = arrayConcat(localTransforms, realmTransforms, mandatoryTransforms)
+    const mandatoryTransforms = [rejectDangerousSourcesTransform];
+    const allTransforms = arrayConcat(
+      localTransforms,
+      realmTransforms,
+      mandatoryTransforms
+    );
 
     function safeEvalOperation(src: string) {
-      let rewriterState = { src, endowments }
-      rewriterState = applyTransforms(rewriterState, allTransforms)
+      let rewriterState = { src, endowments };
+      rewriterState = applyTransforms(rewriterState, allTransforms);
 
       // Combine all optimizable globals.
-      const globalConstants = getOptimizableGlobals(safeGlobal, rewriterState.endowments)
-      const localConstants = getOptimizableGlobals(rewriterState.endowments)
-      const constants = arrayConcat(globalConstants, localConstants)
+      const globalConstants = getOptimizableGlobals(
+        safeGlobal,
+        rewriterState.endowments
+      );
+      const localConstants = getOptimizableGlobals(rewriterState.endowments);
+      const constants = arrayConcat(globalConstants, localConstants);
 
-      const scopedEvaluatorFactory = createScopedEvaluatorFactory(unsafeRec, constants)
+      const scopedEvaluatorFactory = createScopedEvaluatorFactory(
+        unsafeRec,
+        constants
+      );
 
       const scopeHandler = unsafeEval(buildScopeHandlerString)(
         unsafeRec,
         safeGlobal,
         rewriterState.endowments,
         sloppyGlobals
-      )
-      const scopeProxyRevocable = Proxy.revocable({}, scopeHandler)
-      const scopeProxy = scopeProxyRevocable.proxy
-      const scopedEvaluator = apply(scopedEvaluatorFactory, safeGlobal, [scopeProxy])
+      );
+      const scopeProxyRevocable = Proxy.revocable({}, scopeHandler);
+      const scopeProxy = scopeProxyRevocable.proxy;
+      const scopedEvaluator = apply(scopedEvaluatorFactory, safeGlobal, [
+        scopeProxy,
+      ]);
 
-      scopeHandler.useUnsafeEvaluator = true
-      let err
+      scopeHandler.useUnsafeEvaluator = true;
+      let err;
       try {
         // Ensure that "this" resolves to the safe global.
-        return apply(scopedEvaluator, safeGlobal, [rewriterState.src])
+        return apply(scopedEvaluator, safeGlobal, [rewriterState.src]);
       } catch (e) {
         // stash the child-code error in hopes of debugging the internal failure
-        err = e
-        throw e
+        err = e;
+        throw e;
       } finally {
         if (scopeHandler.useUnsafeEvaluator) {
           // the proxy switches this off immediately after ths
           // first access, but if that's not the case we prevent
           // further variable resolution on the scope and abort.
-          scopeProxyRevocable.revoke()
-          throwTantrum('handler did not revoke useUnsafeEvaluator', err)
+          scopeProxyRevocable.revoke();
+          throwTantrum("handler did not revoke useUnsafeEvaluator", err);
         }
       }
     }
 
-    return safeEvalOperation
+    return safeEvalOperation;
   }
 
-  return factory
+  return factory;
 }
 
-export function createSafeEvaluator(unsafeRec: UnsafeRec, safeEvalOperation: EvalFunc) {
-  const { unsafeEval, unsafeFunction } = unsafeRec
+export function createSafeEvaluator(
+  unsafeRec: UnsafeRec,
+  safeEvalOperation: EvalFunc
+) {
+  const { unsafeEval, unsafeFunction } = unsafeRec;
 
-  const safeEval = unsafeEval(buildSafeEvalString)(unsafeRec, safeEvalOperation)
+  const safeEval = unsafeEval(buildSafeEvalString)(
+    unsafeRec,
+    safeEvalOperation
+  );
 
-  assert(getPrototypeOf(safeEval).constructor !== Function, 'hide Function')
-  assert(getPrototypeOf(safeEval).constructor !== unsafeFunction, 'hide unsafeFunction')
+  assert(getPrototypeOf(safeEval).constructor !== Function, "hide Function");
+  assert(
+    getPrototypeOf(safeEval).constructor !== unsafeFunction,
+    "hide unsafeFunction"
+  );
 
-  return safeEval
+  return safeEval;
 }
 
 /**
  * A safe version of the native Function which relies on
  * the safety of evalEvaluator for confinement.
  */
-export function createFunctionEvaluator(unsafeRec: UnsafeRec, safeEvalOperation: EvalFunc) {
-  const { unsafeGlobal, unsafeEval, unsafeFunction } = unsafeRec
+export function createFunctionEvaluator(
+  unsafeRec: UnsafeRec,
+  safeEvalOperation: EvalFunc
+) {
+  const { unsafeGlobal, unsafeEval, unsafeFunction } = unsafeRec;
 
   function safeFunctionOperation(...params: string[]) {
-    const functionBody = `${arrayPop(params) || ''}`
-    let functionParams = `${arrayJoin(params, ',')}`
+    const functionBody = `${arrayPop(params) || ""}`;
+    let functionParams = `${arrayJoin(params, ",")}`;
     if (!regexpTest(/^[\w\s,]*$/, functionParams)) {
       throw new SyntaxError(
-        'shim limitation: Function arg must be simple ASCII identifiers, possibly separated by commas: no default values, pattern matches, or non-ASCII parameter names'
-      )
+        "shim limitation: Function arg must be simple ASCII identifiers, possibly separated by commas: no default values, pattern matches, or non-ASCII parameter names"
+      );
       // this protects against Matt Austin's clever attack:
       // Function("arg=`", "/*body`){});({x: this/**/")
       // which would turn into
@@ -175,16 +215,18 @@ export function createFunctionEvaluator(unsafeRec: UnsafeRec, safeEvalOperation:
     // someone from passing an object with a toString() that returns a safe
     // string the first time, but an evil string the second time.
     // eslint-disable-next-line no-new, new-cap
-    new unsafeFunction(functionBody)
+    new unsafeFunction(functionBody);
 
-    if (stringIncludes(functionParams, ')')) {
+    if (stringIncludes(functionParams, ")")) {
       // If the formal parameters string include ) - an illegal
       // character - it may make the combined function expression
       // compile. We avoid this problem by checking for this early on.
 
       // note: v8 throws just like this does, but chrome accepts
       // e.g. 'a = new Date()'
-      throw new unsafeGlobal.SyntaxError('shim limitation: Function arg string contains parenthesis')
+      throw new unsafeGlobal.SyntaxError(
+        "shim limitation: Function arg string contains parenthesis"
+      );
       // todo: shim integrity threat if they change SyntaxError
     }
 
@@ -193,18 +235,27 @@ export function createFunctionEvaluator(unsafeRec: UnsafeRec, safeEvalOperation:
       // If the formal parameters include an unbalanced block comment, the
       // function must be rejected. Since JavaScript does not allow nested
       // comments we can include a trailing block comment to catch this.
-      functionParams += '\n/*``*/'
+      functionParams += "\n/*``*/";
     }
 
-    const src = `(function(${functionParams}){\n${functionBody}\n})`
+    const src = `(function(${functionParams}){\n${functionBody}\n})`;
 
-    return safeEvalOperation(src)
+    return safeEvalOperation(src);
   }
 
-  const safeFunction = unsafeEval(buildSafeFunctionString)(unsafeRec, safeFunctionOperation)
+  const safeFunction = unsafeEval(buildSafeFunctionString)(
+    unsafeRec,
+    safeFunctionOperation
+  );
 
-  assert(getPrototypeOf(safeFunction).constructor !== Function, 'hide Function')
-  assert(getPrototypeOf(safeFunction).constructor !== unsafeFunction, 'hide unsafeFunction')
+  assert(
+    getPrototypeOf(safeFunction).constructor !== Function,
+    "hide Function"
+  );
+  assert(
+    getPrototypeOf(safeFunction).constructor !== unsafeFunction,
+    "hide unsafeFunction"
+  );
 
-  return safeFunction
+  return safeFunction;
 }

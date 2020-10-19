@@ -1,4 +1,10 @@
-import { arrayFilter, getOwnPropertyDescriptor, getOwnPropertyNames, objectHasOwnProperty, regexpTest } from './commons'
+import {
+  arrayFilter,
+  getOwnPropertyDescriptor,
+  getOwnPropertyNames,
+  objectHasOwnProperty,
+  regexpTest,
+} from "./commons";
 
 // todo: think about how this interacts with endowments, check for conflicts
 // between the names being optimized and the ones added by endowments
@@ -12,7 +18,7 @@ import { arrayFilter, getOwnPropertyDescriptor, getOwnPropertyNames, objectHasOw
  * Note: \w is equivalent [a-zA-Z_0-9]
  * See 11.6.1 Identifier Names
  */
-const identifierPattern = /^[a-zA-Z_$][\w$]*$/
+const identifierPattern = /^[a-zA-Z_$][\w$]*$/;
 
 /**
  * In JavaScript you cannot use these reserved words as variables.
@@ -20,66 +26,66 @@ const identifierPattern = /^[a-zA-Z_$][\w$]*$/
  */
 const keywords = new Set([
   // 11.6.2.1 Keywords
-  'await',
-  'break',
-  'case',
-  'catch',
-  'class',
-  'const',
-  'continue',
-  'debugger',
-  'default',
-  'delete',
-  'do',
-  'else',
-  'export',
-  'extends',
-  'finally',
-  'for',
-  'function',
-  'if',
-  'import',
-  'in',
-  'instanceof',
-  'new',
-  'return',
-  'super',
-  'switch',
-  'this',
-  'throw',
-  'try',
-  'typeof',
-  'var',
-  'void',
-  'while',
-  'with',
-  'yield',
+  "await",
+  "break",
+  "case",
+  "catch",
+  "class",
+  "const",
+  "continue",
+  "debugger",
+  "default",
+  "delete",
+  "do",
+  "else",
+  "export",
+  "extends",
+  "finally",
+  "for",
+  "function",
+  "if",
+  "import",
+  "in",
+  "instanceof",
+  "new",
+  "return",
+  "super",
+  "switch",
+  "this",
+  "throw",
+  "try",
+  "typeof",
+  "var",
+  "void",
+  "while",
+  "with",
+  "yield",
 
   // Also reserved when parsing strict mode code
-  'let',
-  'static',
+  "let",
+  "static",
 
   // 11.6.2.2 Future Reserved Words
-  'enum',
+  "enum",
 
   // Also reserved when parsing strict mode code
-  'implements',
-  'package',
-  'protected',
-  'interface',
-  'private',
-  'public',
+  "implements",
+  "package",
+  "protected",
+  "interface",
+  "private",
+  "public",
 
   // Reserved but not mentioned in specs
-  'await',
+  "await",
 
-  'null',
-  'true',
-  'false',
+  "null",
+  "true",
+  "false",
 
-  'this',
-  'arguments'
-])
+  "this",
+  "arguments",
+]);
 
 /**
  * getOptimizableGlobals()
@@ -90,24 +96,31 @@ const keywords = new Set([
  * service if any of the names are keywords or keyword-like. This is
  * safe and only prevent performance optimization.
  */
-export function getOptimizableGlobals<T>(globalObject: any, localObject: any = {}) {
-  const globalNames = getOwnPropertyNames(globalObject)
+export function getOptimizableGlobals<T>(
+  globalObject: any,
+  localObject: any = {}
+) {
+  const globalNames = getOwnPropertyNames(globalObject);
   // getOwnPropertyNames does ignore Symbols so we don't need this extra check:
   // typeof name === 'string' &&
   const constants = arrayFilter(globalNames, (name: string) => {
     // Exclude globals that will be hidden behind an object positioned
     // closer in the resolution scope chain, typically the endowments.
     if (name in localObject) {
-      return false
+      return false;
     }
 
     // Ensure we have a valid identifier. We use regexpTest rather than
     // /../.test() to guard against the case where RegExp has been poisoned.
-    if (name === 'eval' || keywords.has(name) || !regexpTest(identifierPattern, name)) {
-      return false
+    if (
+      name === "eval" ||
+      keywords.has(name) ||
+      !regexpTest(identifierPattern, name)
+    ) {
+      return false;
     }
 
-    const desc = getOwnPropertyDescriptor(globalObject, name)!
+    const desc = getOwnPropertyDescriptor(globalObject, name)!;
     return (
       //
       // The getters will not have .writable, don't let the falsyness of
@@ -124,9 +137,9 @@ export function getOptimizableGlobals<T>(globalObject: any, localObject: any = {
       // can't have accessors and value properties at the same time, therefore
       // this check is sufficient. Using explicit own property deal with the
       // case where Object.prototype has been poisoned.
-      objectHasOwnProperty(desc, 'value')
-    )
-  })
+      objectHasOwnProperty(desc, "value")
+    );
+  });
 
-  return constants
+  return constants;
 }

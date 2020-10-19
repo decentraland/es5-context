@@ -1,15 +1,15 @@
-import { getOwnPropertyDescriptor } from './commons'
-import { assert } from './utilities'
+import { getOwnPropertyDescriptor } from "./commons";
+import { assert } from "./utilities";
 
 // These value properties of the global object are non-writable,
 // non-configurable data properties.
 const frozenGlobalPropertyNames = [
   // *** 18.1 Value Properties of the Global Object
 
-  'Infinity',
-  'NaN',
-  'undefined'
-]
+  "Infinity",
+  "NaN",
+  "undefined",
+];
 
 // All the following stdlib items have the same name on both our intrinsics
 // object and on the global object. Unlike Infinity/NaN/undefined, these
@@ -22,64 +22,64 @@ const stableGlobalPropertyNames = [
   // *** 18.2 Function Properties of the Global Object
 
   // 'eval', // comes from safeEval instead
-  'isFinite',
-  'isNaN',
-  'parseFloat',
-  'parseInt',
+  "isFinite",
+  "isNaN",
+  "parseFloat",
+  "parseInt",
 
-  'decodeURI',
-  'decodeURIComponent',
-  'encodeURI',
-  'encodeURIComponent',
+  "decodeURI",
+  "decodeURIComponent",
+  "encodeURI",
+  "encodeURIComponent",
 
   // *** 18.3 Constructor Properties of the Global Object
 
-  'Array',
-  'ArrayBuffer',
-  'Boolean',
-  'DataView',
+  "Array",
+  "ArrayBuffer",
+  "Boolean",
+  "DataView",
   // 'Date',  // Unstable
   // 'Error',  // Unstable
-  'EvalError',
-  'Float32Array',
-  'Float64Array',
+  "EvalError",
+  "Float32Array",
+  "Float64Array",
   // 'Function',  // comes from safeFunction instead
-  'Int8Array',
-  'Int16Array',
-  'Int32Array',
-  'Map',
-  'Number',
-  'Object',
+  "Int8Array",
+  "Int16Array",
+  "Int32Array",
+  "Map",
+  "Number",
+  "Object",
   // 'Promise',  // Unstable
   // 'Proxy',  // Unstable
-  'RangeError',
-  'ReferenceError',
+  "RangeError",
+  "ReferenceError",
   // 'RegExp',  // Unstable
-  'Set',
+  "Set",
   // 'SharedArrayBuffer'  // removed on Jan 5, 2018
-  'String',
-  'Symbol',
-  'SyntaxError',
-  'TypeError',
-  'Uint8Array',
-  'Uint8ClampedArray',
-  'Uint16Array',
-  'Uint32Array',
-  'URIError',
-  'WeakMap',
-  'WeakSet',
+  "String",
+  "Symbol",
+  "SyntaxError",
+  "TypeError",
+  "Uint8Array",
+  "Uint8ClampedArray",
+  "Uint16Array",
+  "Uint32Array",
+  "URIError",
+  "WeakMap",
+  "WeakSet",
 
   // *** 18.4 Other Properties of the Global Object
 
   // 'Atomics', // removed on Jan 5, 2018
-  'JSON',
-  'Math',
-  'Reflect',
+  "JSON",
+  "Math",
+  "Reflect",
 
   // *** Annex B
 
-  'escape',
-  'unescape'
+  "escape",
+  "unescape",
 
   // *** ECMA-402
 
@@ -88,43 +88,62 @@ const stableGlobalPropertyNames = [
   // *** ESNext
 
   // 'Realm' // Comes from createRealmGlobalObject()
-]
+];
 
-const unstableGlobalPropertyNames = ['Date', 'Error', 'Promise', 'Proxy', 'RegExp', 'Intl']
+const unstableGlobalPropertyNames = [
+  "Date",
+  "Error",
+  "Promise",
+  "Proxy",
+  "RegExp",
+  "Intl",
+];
 
-export function getSharedGlobalDescs(unsafeGlobal: any) {
-  const descriptors: Record<string, PropertyDescriptor> = {}
+export function getSharedGlobalDescs(
+  unsafeGlobal: any,
+  configurableGlobals = false
+) {
+  const descriptors: Record<string, PropertyDescriptor> = {};
 
-  function describe(names: string[], writable: boolean, enumerable: boolean, configurable: boolean) {
+  function describe(
+    names: string[],
+    writable: boolean,
+    enumerable: boolean,
+    configurable: boolean
+  ) {
     for (const name of names) {
-      const desc = getOwnPropertyDescriptor(unsafeGlobal, name)
+      const desc = getOwnPropertyDescriptor(unsafeGlobal, name);
       if (desc) {
         // Abort if an accessor is found on the unsafe global object
         // instead of a data property. We should never get into this
         // non standard situation.
-        assert('value' in desc, `unexpected accessor on global property: ${name}`)
+        assert(
+          "value" in desc,
+          `unexpected accessor on global property: ${name}`
+        );
 
         descriptors[name] = {
           value: desc.value,
           writable,
           enumerable,
-          configurable
-        }
+          configurable,
+        };
       }
     }
   }
 
-  describe(frozenGlobalPropertyNames, false, false, false)
-  // The following is correct but expensive.
-  // describe(stableGlobalPropertyNames, true, false, true);
-  // Instead, for now, we let these get optimized.
-  //
-  // TODO: We should provide an option to turn this optimization off,
-  // by feeding "true, false, true" here instead.
-  describe(stableGlobalPropertyNames, false, false, false)
+  if (configurableGlobals) {
+    describe(frozenGlobalPropertyNames, true, false, true);
+    // The following is correct but expensive.
+    describe(stableGlobalPropertyNames, true, false, true);
+  } else {
+    // Instead, for now, we let these get optimized.
+    describe(frozenGlobalPropertyNames, false, false, false);
+    describe(stableGlobalPropertyNames, false, false, false);
+  }
   // These we keep replaceable and removable, because we expect
   // others, e.g., SES, may want to do so.
-  describe(unstableGlobalPropertyNames, true, false, true)
+  describe(unstableGlobalPropertyNames, true, false, true);
 
-  return descriptors
+  return descriptors;
 }

@@ -15,14 +15,14 @@ export const {
   getOwnPropertyDescriptors,
   getOwnPropertyNames,
   getPrototypeOf,
-  setPrototypeOf
-} = Object
+  setPrototypeOf,
+} = Object;
 
 export const {
   apply,
-  ownKeys // Reflect.ownKeys includes Symbols and unenumerables,
+  ownKeys, // Reflect.ownKeys includes Symbols and unenumerables,
   // unlike Object.keys()
-} = Reflect
+} = Reflect;
 
 /**
  * uncurryThis() See
@@ -40,12 +40,16 @@ export const {
  * const bind = Function.prototype.bind;
  * const uncurryThis = bind.bind(bind.call);
  */
-const uncurryThis = <T extends (this: V, ...args: any) => any, V>(fn: T) =>
-  ((thisArg: V, ...args: Parameters<T>): ReturnType<T> => apply(fn, thisArg, args))
+const uncurryThis = <T extends (this: V, ...args: any) => any, V>(fn: T) => (
+  thisArg: V,
+  ...args: Parameters<T>
+): ReturnType<T> => apply(fn, thisArg, args);
 
 // We also capture these for security: changes to Array.prototype after the
 // Realm shim runs shouldn't affect subsequent Realm operations.
-export const objectHasOwnProperty = uncurryThis(Object.prototype.hasOwnProperty),
+export const objectHasOwnProperty = uncurryThis(
+    Object.prototype.hasOwnProperty
+  ),
   arrayForEach = uncurryThis(Array.prototype.forEach),
   arrayFilter = uncurryThis(Array.prototype.filter),
   arrayPush = uncurryThis(Array.prototype.push),
@@ -54,4 +58,4 @@ export const objectHasOwnProperty = uncurryThis(Object.prototype.hasOwnProperty)
   arrayConcat = uncurryThis(Array.prototype.concat),
   regexpTest = uncurryThis(RegExp.prototype.test),
   stringMatch = uncurryThis(String.prototype.match),
-  stringIncludes = uncurryThis(String.prototype.includes)
+  stringIncludes = uncurryThis(String.prototype.includes);

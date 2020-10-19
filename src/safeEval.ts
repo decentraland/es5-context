@@ -1,10 +1,10 @@
-import type { EvalFunc, UnsafeRec } from './evaluators'
-import { safeStringifyFunction } from './utilities'
+import type { EvalFunc, UnsafeRec } from "./evaluators";
+import { safeStringifyFunction } from "./utilities";
 
 function buildSafeEval(unsafeRec: UnsafeRec, safeEvalOperation: EvalFunc) {
-  const { callAndWrapError } = unsafeRec
+  const { callAndWrapError } = unsafeRec;
 
-  const { defineProperties } = Object
+  const { defineProperties } = Object;
 
   // We use the the concise method syntax to create an eval without a
   // [[Construct]] behavior (such that the invocation "new eval()" throws
@@ -12,9 +12,9 @@ function buildSafeEval(unsafeRec: UnsafeRec, safeEvalOperation: EvalFunc) {
   // 'this' binding.
   const safeEval = {
     eval() {
-      return callAndWrapError(safeEvalOperation, arguments)
-    }
-  }.eval
+      return callAndWrapError(safeEvalOperation, arguments);
+    },
+  }.eval;
 
   // safeEval's prototype RootRealm's value and instanceof Function
   // is true inside the realm. It doesn't point at the primal realm
@@ -27,13 +27,13 @@ function buildSafeEval(unsafeRec: UnsafeRec, safeEvalOperation: EvalFunc) {
       // apparent direct eval syntax does not appear in this
       // file. Thus, we avoid rejection by the overly eager
       // rejectDangerousSources.
-      value: () => `function ${'eval'}() { [shim code] }`,
+      value: () => `function ${"eval"}() { [shim code] }`,
       writable: false,
       enumerable: false,
-      configurable: true
-    }
-  })
+      configurable: true,
+    },
+  });
 
-  return safeEval
+  return safeEval;
 }
-export const buildSafeEvalString = safeStringifyFunction(buildSafeEval)
+export const buildSafeEvalString = safeStringifyFunction(buildSafeEval);

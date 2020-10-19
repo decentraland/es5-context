@@ -1,6 +1,6 @@
 // https://github.com/Agoric/realms-shim/blob/60f29d0f9cc5cd1c04c9ad3b5e75c70a459baf86/src/scopeHandler.js#L35
 
-import { safeStringifyFunction } from './utilities'
+import { safeStringifyFunction } from "./utilities";
 
 /**
  * ScopeHandler manages a Proxy which serves as the global scope for the
@@ -19,15 +19,18 @@ import { safeStringifyFunction } from './utilities'
  * @returns {ProxyHandler<any> & Record<string, any>}
  */
 export function buildScopeHandler<T extends object>(
-  unsafeRec: {unsafeGlobal: Record<string, any>, unsafeEval?: (code: string) => any},
+  unsafeRec: {
+    unsafeGlobal: Record<string, any>;
+    unsafeEval?: (code: string) => any;
+  },
   safeGlobal: any,
   endowments = {},
   sloppyGlobals = false
 ): ProxyHandler<T> & { __proto__: any; useUnsafeEvaluator: boolean } {
-  const { unsafeGlobal, unsafeEval } = unsafeRec
+  const { unsafeGlobal, unsafeEval } = unsafeRec;
 
-  const { freeze, getOwnPropertyDescriptor } = Object
-  const { get: reflectGet, set: reflectSet } = Reflect
+  const { freeze, getOwnPropertyDescriptor } = Object;
+  const { get: reflectGet, set: reflectSet } = Reflect;
 
   /**
    * alwaysThrowHandler is a proxy handler which throws on any trap called.
@@ -37,9 +40,11 @@ export function buildScopeHandler<T extends object>(
   const alwaysThrowHandler = new Proxy(freeze({}), {
     get(target, prop) {
       // todo: replace with throwTantrum
-      throw new TypeError(`unexpected scope handler trap called: ${String(prop)}`)
-    }
-  })
+      throw new TypeError(
+        `unexpected scope handler trap called: ${String(prop)}`
+      );
+    },
+  });
 
   return {
     // The scope handler throws if any trap other than get/set/has are run
@@ -54,23 +59,23 @@ export function buildScopeHandler<T extends object>(
     useUnsafeEvaluator: false,
 
     get(shadow, prop) {
-      if (typeof prop === 'symbol') {
+      if (typeof prop === "symbol") {
         // Safe to return a primal realm Object here because the only code that
         // can do a get() on a non-string is the internals of with() itself,
         // and the only thing it does is to look for properties on it. User
         // code cannot do a lookup on non-strings.
-        return undefined
+        return undefined;
       }
 
       // Special treatment for eval. The very first lookup of 'eval' gets the
       // unsafe (real direct) eval, so it will get the lexical scope that uses
       // the 'with' context.
-      if (prop === 'eval') {
+      if (prop === "eval") {
         // test that it is true rather than merely truthy
         if (this.useUnsafeEvaluator === true) {
           // revoke before use
-          this.useUnsafeEvaluator = false
-          return unsafeEval
+          this.useUnsafeEvaluator = false;
+          return unsafeEval;
         }
         // fall through
       }
@@ -79,30 +84,30 @@ export function buildScopeHandler<T extends object>(
       if (prop in endowments) {
         // Ensure that the 'this' value on getters resolves
         // to the safeGlobal, not to the endowments object.
-        return reflectGet(endowments, prop, safeGlobal)
+        return reflectGet(endowments, prop, safeGlobal);
       }
 
       // Properties of the global.
-      return reflectGet(safeGlobal, prop)
+      return reflectGet(safeGlobal, prop);
     },
 
     // eslint-disable-next-line class-methods-use-this
     set(shadow, prop, value) {
       // Properties of the endowments.
       if (prop in endowments) {
-        const desc = getOwnPropertyDescriptor(endowments, prop)!
-        if ('value' in desc) {
+        const desc = getOwnPropertyDescriptor(endowments, prop)!;
+        if ("value" in desc) {
           // Work around a peculiar behavior in the specs, where
           // value properties are defined on the receiver.
-          return reflectSet(endowments, prop, value)
+          return reflectSet(endowments, prop, value);
         }
         // Ensure that the 'this' value on setters resolves
         // to the safeGlobal, not to the endowments object.
-        return reflectSet(endowments, prop, value, safeGlobal)
+        return reflectSet(endowments, prop, value, safeGlobal);
       }
 
       // Properties of the global.
-      return reflectSet(safeGlobal, prop, value)
+      return reflectSet(safeGlobal, prop, value);
     },
 
     // we need has() to return false for some names to prevent the lookup  from
@@ -130,7 +135,7 @@ export function buildScopeHandler<T extends object>(
 
       if (sloppyGlobals) {
         // Everything is potentially available.
-        return true
+        return true;
       }
 
       // unsafeGlobal: hide all properties of unsafeGlobal at the
@@ -138,20 +143,25 @@ export function buildScopeHandler<T extends object>(
       // example, in the browser, evaluating 'document = 3', will add
       // a property to safeGlobal instead of throwing a
       // ReferenceError.
-      if (prop === 'eval' || prop in endowments || prop in safeGlobal || prop in unsafeGlobal) {
-        return true
+      if (
+        prop === "eval" ||
+        prop in endowments ||
+        prop in safeGlobal ||
+        prop in unsafeGlobal
+      ) {
+        return true;
       }
 
-      return false
+      return false;
     },
 
     // note: this is likely a bug of safari
     // https://bugs.webkit.org/show_bug.cgi?id=195534
 
     getPrototypeOf() {
-      return null
-    }
-  }
+      return null;
+    },
+  };
 }
 
-export const buildScopeHandlerString = safeStringifyFunction(buildScopeHandler)
+export const buildScopeHandlerString = safeStringifyFunction(buildScopeHandler);
