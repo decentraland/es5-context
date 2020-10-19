@@ -47,7 +47,7 @@ test('Global default values', t => {
 
 test('Global accessor throws', t => {
   t.plan(3);
-
+  // @ts-ignore
   sinon.stub(console, 'error').callsFake();
 
   const mockGlobal = {};
@@ -62,14 +62,14 @@ test('Global accessor throws', t => {
     /unexpected accessor on global property: JSON/
   );
 
-  // eslint-disable-next-line no-console
+  // @ts-ignore
   t.equals(console.error.callCount, 1);
   t.equals(
-    // eslint-disable-next-line no-console
+    // @ts-ignore
     console.error.getCall(0).args[0],
     'please report internal shim error: unexpected accessor on global property: JSON'
   );
 
-  // eslint-disable-next-line no-console
+  // @ts-ignore
   console.error.restore();
 });

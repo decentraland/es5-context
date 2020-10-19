@@ -11,6 +11,7 @@ test('repairFunctions', specs => {
     t.doesNotThrow(() => Function(''));
 
     // eslint-disable-next-line no-proto
+    // @ts-ignore
     t.throws(() => Error.__proto__.constructor(''), TypeError);
     t.throws(() => Function.prototype.constructor(''), TypeError);
 

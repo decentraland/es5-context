@@ -19,10 +19,11 @@ import { applyTransformsString } from "./transforms";
 import { rejectDangerousSourcesTransform } from "./sourceParser";
 
 export type EvalFunc = (s: string) => any;
+export type SafeFunctionOp = CallableFunction;
 export type UnsafeRec = {
   unsafeGlobal: any;
   unsafeEval: EvalFunc;
-  unsafeFunction: typeof Function;
+  unsafeFunction: SafeFunctionOp ;
   callAndWrapError: (a: any, b: any) => any;
 };
 
@@ -82,13 +83,13 @@ function createScopedEvaluatorFactory(
 export function createSafeEvaluatorFactory(
   unsafeRec: UnsafeRec,
   safeGlobal: any,
-  transforms?: any[],
+  transforms?: any,
   sloppyGlobals?: boolean
 ) {
   const { unsafeEval } = unsafeRec;
   const applyTransforms = unsafeEval(applyTransformsString);
 
-  function factory(endowments = {}, options: any = {}) {
+  function factory(endowments: any = {}, options: any = {}) {
     // todo clone all arguments passed to returned function
     const localTransforms = options.transforms || [];
     const realmTransforms = transforms || [];
@@ -175,6 +176,13 @@ export function createSafeEvaluator(
   return safeEval;
 }
 
+export function createSafeEvaluatorWhichTakesEndowments(
+  safeEvaluatorFactory: ReturnType<typeof createSafeEvaluatorFactory>
+) {
+  return (x: any, endowments: any, options: any = {}) =>
+    safeEvaluatorFactory(endowments, options)(x);
+}
+
 /**
  * A safe version of the native Function which relies on
  * the safety of evalEvaluator for confinement.
@@ -214,7 +222,7 @@ export function createFunctionEvaluator(
     // function body. We coerce the body into a real string above to prevent
     // someone from passing an object with a toString() that returns a safe
     // string the first time, but an evil string the second time.
-    // eslint-disable-next-line no-new, new-cap
+    // @ts-ignore
     new unsafeFunction(functionBody);
 
     if (stringIncludes(functionParams, ")")) {

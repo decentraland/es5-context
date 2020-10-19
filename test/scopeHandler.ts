@@ -4,7 +4,7 @@ import { buildScopeHandlerString } from '../src/scopeHandler';
 
 test('scope handler traps', t => {
   t.plan(13);
-
+// @ts-ignore
   sinon.stub(console, 'error').callsFake();
 
   const unsafeRec = {
@@ -31,7 +31,7 @@ test('scope handler traps', t => {
     /unexpected scope handler trap called/
   );
 
-  // eslint-disable-next-line no-console
+  // @ts-ignore
   console.error.restore();
 });
 
@@ -112,6 +112,7 @@ test('scope handler set', t => {
 
   const evil = {};
   handler.set(target, 'eval', evil);
+  // @ts-ignore
   t.equal(safeGlobal.eval, evil);
 
   const bar = {};

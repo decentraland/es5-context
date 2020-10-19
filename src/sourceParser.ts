@@ -52,9 +52,39 @@ function rejectHtmlComments(s: string) {
 
 const importPattern = /\bimport\s*(?:\(|\/[/*])/;
 
+// Still allow JSDocs that use `import()` such as:
+// * @param {import('./foo.js').MyType}
+// * @param {typeof import('./foo.js').Obj}
+//
+// Note that this is not valid syntax outside of a comment
+// (import expressions cannot be the start of an object literal,
+// nor can decorators adorn blocks).
+//
+// Also note that the dollar at the end matches where the import begins
+// since the 's' modifier is given.
+//
+// BE CAREFUL not to use `\s`, as that will match newlines.
+const allowedImportPrefix = /@[a-z]+ +\{((type|key)of +)?$/s;
+
 function rejectImportExpressions(s: string) {
-  const index = s.search(importPattern);
-  if (index !== -1) {
+  let index = 0;
+  for (;;) {
+    // Find the next `import` string in the source.
+    const nextMatch = s.slice(index).search(importPattern);
+    if (nextMatch === -1) {
+      // Not found, the source is okay.
+      return;
+    }
+    // Advance our index to the beginning of `import`.
+    index += nextMatch;
+    // Take the source up to the match, and see if
+    // it ends in the allowed prefix.
+    if (s.slice(0, index).match(allowedImportPrefix)) {
+      // Move the search one character forward, and go again.
+      index += 1;
+      continue;
+    }
+    // It doesn't end in the allowed prefix, so reject the source entirely.
     const linenum = s.slice(0, index).split("\n").length; // more or less
     throw new SyntaxError(
       `possible import expression rejected around line ${linenum}`

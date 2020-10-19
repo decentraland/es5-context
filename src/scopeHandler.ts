@@ -1,5 +1,4 @@
-// https://github.com/Agoric/realms-shim/blob/60f29d0f9cc5cd1c04c9ad3b5e75c70a459baf86/src/scopeHandler.js#L35
-
+import { UnsafeRec } from "./evaluators";
 import { safeStringifyFunction } from "./utilities";
 
 /**
@@ -18,15 +17,12 @@ import { safeStringifyFunction } from "./utilities";
  *
  * @returns {ProxyHandler<any> & Record<string, any>}
  */
-export function buildScopeHandler<T extends object>(
-  unsafeRec: {
-    unsafeGlobal: Record<string, any>;
-    unsafeEval?: (code: string) => any;
-  },
+export function buildScopeHandler(
+  unsafeRec: UnsafeRec,
   safeGlobal: any,
   endowments = {},
   sloppyGlobals = false
-): ProxyHandler<T> & { __proto__: any; useUnsafeEvaluator: boolean } {
+): ProxyHandler<any> & Record<string, any> {
   const { unsafeGlobal, unsafeEval } = unsafeRec;
 
   const { freeze, getOwnPropertyDescriptor } = Object;

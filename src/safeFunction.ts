@@ -1,7 +1,10 @@
-import { UnsafeRec } from "./evaluators";
+import { SafeFunctionOp, UnsafeRec } from "./evaluators";
 import { safeStringifyFunction } from "./utilities";
 
-function buildSafeFunction<T>(unsafeRec: UnsafeRec, safeFunctionOperation: T) {
+function buildSafeFunction(
+  unsafeRec: UnsafeRec,
+  safeFunctionOperation: SafeFunctionOp
+) {
   const { callAndWrapError, unsafeFunction } = unsafeRec;
 
   const { defineProperties } = Object;

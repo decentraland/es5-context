@@ -96,7 +96,7 @@ const keywords = new Set([
  * service if any of the names are keywords or keyword-like. This is
  * safe and only prevent performance optimization.
  */
-export function getOptimizableGlobals<T>(
+export function getOptimizableGlobals(
   globalObject: any,
   localObject: any = {}
 ) {

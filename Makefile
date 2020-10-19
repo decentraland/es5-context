@@ -10,6 +10,6 @@ build: clean
 	node_modules/.bin/tsc -p tsconfig.json
 
 test:
-	
+	node_modules/.bin/ts-node node_modules/tape/bin/tape 'test/*.ts'
 
-.PHONY: build clean
+.PHONY: build clean test

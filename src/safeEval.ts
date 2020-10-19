@@ -1,4 +1,4 @@
-import type { EvalFunc, UnsafeRec } from "./evaluators";
+import { EvalFunc, UnsafeRec } from "./evaluators";
 import { safeStringifyFunction } from "./utilities";
 
 function buildSafeEval(unsafeRec: UnsafeRec, safeEvalOperation: EvalFunc) {
