@@ -1,0 +1,15 @@
+.vscode
+node_modules
+
+tmp
+*.log
+
+dist
+
+.DS_Store
+test-*
+scripts/*.js
+scripts/*.d.ts
+
+scripts/release.md
+src/css
