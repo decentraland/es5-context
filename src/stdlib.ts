@@ -47,7 +47,6 @@ const stableGlobalPropertyNames = [
   "Int8Array",
   "Int16Array",
   "Int32Array",
-  "Map",
   "Number",
   "Object",
   // 'Promise',  // Unstable
@@ -55,10 +54,8 @@ const stableGlobalPropertyNames = [
   "RangeError",
   "ReferenceError",
   // 'RegExp',  // Unstable
-  "Set",
   // 'SharedArrayBuffer'  // removed on Jan 5, 2018
   "String",
-  "Symbol",
   "SyntaxError",
   "TypeError",
   "Uint8Array",
@@ -66,37 +63,23 @@ const stableGlobalPropertyNames = [
   "Uint16Array",
   "Uint32Array",
   "URIError",
-  "WeakMap",
-  "WeakSet",
 
   // *** 18.4 Other Properties of the Global Object
 
   // 'Atomics', // removed on Jan 5, 2018
   "JSON",
   "Math",
-  "Reflect",
-
-  // *** Annex B
 
   "escape",
   "unescape",
-
-  // *** ECMA-402
-
-  // 'Intl'  // Unstable
-
-  // *** ESNext
-
-  // 'Realm' // Comes from createRealmGlobalObject()
 ];
 
 const unstableGlobalPropertyNames = [
   "Date",
   "Error",
-  "Promise",
-  "Proxy",
+  "Promise", // NOT ES5
   "RegExp",
-  "Intl",
+  "Intl", // NOT ES5
 ];
 
 export function getSharedGlobalDescs(

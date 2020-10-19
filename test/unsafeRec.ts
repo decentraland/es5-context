@@ -6,7 +6,7 @@ declare var document: any;
 const isBrowser = typeof document === "object";
 
 test("createNewUnsafeRec", (t) => {
-  t.plan(6);
+  t.plan(7);
 
   const unsafeRec = createNewUnsafeRec(globalThis);
   const {
@@ -31,4 +31,6 @@ test("createNewUnsafeRec", (t) => {
   t.deepEqual(allShims, []);
 
   t.ok(unsafeGlobal instanceof unsafeGlobal.Object, "global must be an Object");
+
+  t.ok("then" in unsafeEval("Promise.resolve(1)"), "promise works");
 });
