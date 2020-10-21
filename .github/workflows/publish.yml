@@ -1,10 +1,10 @@
 on:
   push:
     branches:
-      - "master"
+      - master
+      - main
   create:
     tags:
-      - v*
 
 name: CI
 jobs:
