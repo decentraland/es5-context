@@ -2,6 +2,9 @@ on:
   push:
     branches:
       - "master"
+  create:
+    tags:
+      - v*
 
 name: CI
 jobs:

@@ -28,3 +28,7 @@ rec.safeEval("console"); // undefined
 rec.safeEval("Proxy"); // undefined
 rec.safeEval("Promise"); // [Function: Promise]
 ```
+
+### Publishing
+
+This repository is automatically published on merge to master by oddish
