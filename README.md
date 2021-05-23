@@ -1,4 +1,4 @@
-# dcl-es5-context
+# @dcl/es5-context
 
 This library is a "good enough" effort to sandbox as much as possible the context of the WebWorkers.
 
@@ -7,11 +7,11 @@ With the objective of migrating to a future light weight runtime for the scene c
 ## Usage
 
 ```bash
-npm i -D dcl-es5-context
+npm i -D @dcl/es5-context
 ```
 
 ```ts
-import { createRealmRec, createNewUnsafeRec } from "dcl-es5-context";
+import { createRealmRec, createNewUnsafeRec } from "@dcl/es5-context";
 
 const rec = createRealmRec(createNewUnsafeRec(globalThis));
 
