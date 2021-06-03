@@ -18,6 +18,10 @@
     "ts-node": "^9.0.0",
     "typescript": "^4.0.2"
   },
-  "dependencies": {},
-  "files": ["dist"]
+  "dependencies": {
+    "expect": "^27.0.1"
+  },
+  "files": [
+    "dist"
+  ]
 }
